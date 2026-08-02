@@ -16,6 +16,14 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider
+        .GetRequiredService<ConferenceBookingDbContext>();
+
+    await DbInitializer.InitializeAsync(context);
+}
+
 if (app.Environment.IsDevelopment())
 {
     // встроенный OpenAPI
