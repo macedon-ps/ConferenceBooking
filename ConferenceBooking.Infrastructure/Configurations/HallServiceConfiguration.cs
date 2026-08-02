@@ -18,7 +18,7 @@ public class HallServiceConfiguration
         });
 
         builder.HasOne<Hall>()
-            .WithMany()
+            .WithMany(x => x.Services)
             .HasForeignKey(x => x.HallId)
             .OnDelete(DeleteBehavior.Cascade);
 

@@ -26,12 +26,7 @@ public class HallConfiguration : IEntityTypeConfiguration<Hall>
             .IsRequired()
             .HasPrecision(18, 2);
 
-        builder.HasMany<HallService>()
-            .WithOne()
-            .HasForeignKey(x => x.HallId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(nameof(Hall.Services))
+        builder.Navigation(x => x.Services)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

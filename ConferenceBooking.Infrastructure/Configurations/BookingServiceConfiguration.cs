@@ -18,9 +18,9 @@ public class BookingServiceConfiguration
         });
 
         builder.HasOne<Booking>()
-            .WithMany()
-            .HasForeignKey(x => x.BookingId)
-            .OnDelete(DeleteBehavior.Cascade);
+           .WithMany(x => x.Services)
+           .HasForeignKey(x => x.BookingId)
+           .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne<Service>()
             .WithMany()

@@ -34,12 +34,7 @@ public class BookingConfiguration
             .HasForeignKey(x => x.HallId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany<BookingService>()
-            .WithOne()
-            .HasForeignKey(x => x.BookingId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Navigation(nameof(Booking.Services))
+        builder.Navigation(x => x.Services)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
