@@ -1,32 +1,39 @@
+using ConferenceBooking.Domain.Interfaces;
 using ConferenceBooking.Infrastructure.Data;
+using ConferenceBooking.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddScoped<IHallRepository, HallRepository>();
+builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+
 builder.Services.AddDbContext<ConferenceBookingDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddOpenApi();                      // новый шаблон
+builder.Services.AddOpenApi();                      // новий шаблон
 
-builder.Services.AddEndpointsApiExplorer();         // старый формат
+builder.Services.AddEndpointsApiExplorer();         // старий формат
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+/* Ініціалізація бази даних первинними даними, якщо вона порожня 
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider
         .GetRequiredService<ConferenceBookingDbContext>();
 
     await DbInitializer.InitializeAsync(context);
-}
+}*/
 
 if (app.Environment.IsDevelopment())
 {
-    // встроенный OpenAPI
+    // вбудований OpenAPI
     app.MapOpenApi();
 
     // Swagger UI
