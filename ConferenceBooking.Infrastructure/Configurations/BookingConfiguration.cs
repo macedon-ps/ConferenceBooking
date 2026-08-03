@@ -4,9 +4,16 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ConferenceBooking.Infrastructure.Configurations;
 
+/// <summary>
+/// Клас конфігурації для сутності <see cref="Booking"/>.
+/// </summary>
 public class BookingConfiguration
     : IEntityTypeConfiguration<Booking>
 {
+    /// <summary>
+    /// Метод для налаштування конфігурації сутності <see cref="Booking"/> за допомогою <see cref="EntityTypeBuilder{TEntity}"/>.
+    /// </summary>
+    /// <param name="builder">Будівельник сутності</param>
     public void Configure(EntityTypeBuilder<Booking> builder)
     {
         builder.ToTable("Bookings");

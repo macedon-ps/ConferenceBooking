@@ -3,19 +3,27 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ConferenceBooking.Infrastructure.Data;
 
+/// <summary>
+/// Клас для ініціалізації бази даних з початковими даними, включаючи створення залів та послуг.
+/// </summary>
 public static class DbInitializer
 {
+    /// <summary>
+    /// Метод для ініціалізації бази даних з початковими даними, включаючи створення залів та послуг.
+    /// </summary>
+    /// <param name="context">Контекст бази даних</param>
+    /// <returns></returns>
     public static async Task InitializeAsync(
         ConferenceBookingDbContext context)
     {
-        // Убеждаемся, что все миграции применены.
+        // Упевняємося, що база даних створена та застосовуємо міграції
         await context.Database.MigrateAsync();
 
-        // Если услуги уже существуют, повторно их не создаём.
+        // Якщо послуги вже існують, повторно їх не створюємо
         if (await context.Services.AnyAsync())
             return;
 
-        // Создаём справочник услуг.
+        // Створюємо довідник послуг.
         var projector = Service.Create("Проектор", 500m);
         var wiFi = Service.Create("Wi-Fi", 300m);
         var sound = Service.Create("Звук", 700m);
@@ -25,7 +33,7 @@ public static class DbInitializer
             wiFi,
             sound);
 
-        // Создаём конференц-залы.
+        // Створюємо конференц-зали.
         var hallA = Hall.Create(
             "Зал А",
             50,
@@ -41,7 +49,7 @@ public static class DbInitializer
             30,
             1500m);
 
-        // Назначаем услуги залам.
+        // Призначаємо послуги залам.
         hallA.AddService(projector.Id);
         hallA.AddService(wiFi.Id);
         hallA.AddService(sound.Id);
