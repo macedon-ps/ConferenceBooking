@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace ConferenceBooking.Application.DTOs.Bookings;
+﻿namespace ConferenceBooking.Application.DTOs.Bookings;
 
 /// <summary>
 /// Клас запиту для створення бронювання. Містить інформацію про ідентифікатор залу, початковий та кінцевий час бронювання, а також список ідентифікаторів послуг, які користувач хоче додати до бронювання.
