@@ -10,19 +10,16 @@ public class CreateBookingRequest
     /// <summary>
     /// Guid Id залу. Містить унікальний ідентифікатор типу Guid, який використовується для ідентифікації конкретного залу, який користувач хоче забронювати.
     /// </summary>
-    [Required]
     public Guid HallId { get; set; }
 
     /// <summary>
     /// Початковий час бронювання. Містить значення типу DateTime, яке вказує на початок періоду, протягом якого користувач хоче забронювати зал.
     /// </summary>
-    [Required]
     public DateTime StartTime { get; set; }
 
     /// <summary>
     /// Кінцевий час бронювання. Містить значення типу DateTime, яке вказує на кінець періоду, протягом якого користувач хоче забронювати зал.
     /// </summary>
-    [Required]
     public DateTime EndTime { get; set; }
 
     /// <summary>
