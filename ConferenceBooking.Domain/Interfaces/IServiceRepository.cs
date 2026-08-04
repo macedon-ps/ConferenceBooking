@@ -15,6 +15,13 @@ namespace ConferenceBooking.Domain.Interfaces
         Task<Service?> GetByIdAsync(Guid id);
 
         /// <summary>
+        /// Сигнатура методу для отримання послуг за їх унікальними ідентифікаторами.
+        /// </summary>
+        /// <param name="ids">Колекція унікальних ідентифікаторів послуг</param>
+        /// <returns>Список послуг, що відповідають заданим ідентифікаторам </returns>
+        Task<IReadOnlyList<Service>> GetByIdsAsync(IEnumerable<Guid> ids);
+
+        /// <summary>
         /// Сигнатура методу для отримання всіх послуг.
         /// </summary>
         /// <returns>Список всіх послуг</returns>

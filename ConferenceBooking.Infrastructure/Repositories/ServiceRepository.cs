@@ -83,4 +83,25 @@ public class ServiceRepository : IServiceRepository
         return await _context.Services
             .AnyAsync(s => s.Id == id);
     }
+
+    /// <summary>
+    /// Метод для отримання списку послуг за їх унікальними ідентифікаторами.
+    /// </summary>
+    /// <param name="ids">Колекція унікальних ідентифікаторів послуг</param>
+    /// <returns>Список послуг, що відповідають заданим ідентифікаторам</returns>
+    public async Task<IReadOnlyList<Service>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        var serviceIds = ids
+        .Distinct()
+        .ToList();
+
+        if (serviceIds.Count == 0)
+        {
+            return Array.Empty<Service>();
+        }
+
+        return await _context.Services
+            .Where(s => serviceIds.Contains(s.Id))
+            .ToListAsync();
+    }
 }
