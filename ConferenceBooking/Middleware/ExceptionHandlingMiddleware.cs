@@ -1,4 +1,5 @@
 ﻿using ConferenceBooking.Domain.Exceptions;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace ConferenceBooking.Api.Middleware;
@@ -36,15 +37,31 @@ public class ExceptionHandlingMiddleware
     /// <returns>Завдання, яке представляє асинхронну операцію обробки запиту.</returns>
     public async Task InvokeAsync(HttpContext context)
     {
+        var stopwatch = Stopwatch.StartNew();
+
         try
         {
             await _next(context);
+
+            stopwatch.Stop();
+
+            _logger.LogInformation(
+                "HTTP {Method} {Path} responded {StatusCode} in {ElapsedMilliseconds} ms.",
+                context.Request.Method,
+                context.Request.Path,
+                context.Response.StatusCode,
+                stopwatch.ElapsedMilliseconds);
         }
         catch (Exception exception)
         {
+            stopwatch.Stop();
+
             _logger.LogError(
                 exception,
-                "An unhandled exception occurred.");
+                "Unhandled exception during HTTP {Method} {Path} after {ElapsedMilliseconds} ms.",
+                context.Request.Method,
+                context.Request.Path,
+                stopwatch.ElapsedMilliseconds);
 
             await HandleExceptionAsync(
                 context,
@@ -58,9 +75,7 @@ public class ExceptionHandlingMiddleware
     /// <param name="context">Об'єкт HttpContext, який містить інформацію про поточний HTTP-запит та відповідь.</param>
     /// <param name="exception">Виняток, який виник під час обробки запиту.</param>
     /// <returns>Завдання, яке представляє асинхронну операцію формування відповіді на виняток.</returns>
-    private static async Task HandleExceptionAsync(
-        HttpContext context,
-        Exception exception)
+    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         var statusCode = exception switch
         {

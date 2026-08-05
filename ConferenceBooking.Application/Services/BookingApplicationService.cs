@@ -3,6 +3,7 @@ using ConferenceBooking.Application.DTOs.Services;
 using ConferenceBooking.Application.Interfaces;
 using ConferenceBooking.Domain.Entities;
 using ConferenceBooking.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace ConferenceBooking.Application.Services;
 
@@ -32,22 +33,24 @@ public class BookingApplicationService : IBookingApplicationService
     private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>
+    /// Логер для запису повідомлень про помилки та інформаційних повідомлень. Використовується для логування подій під час виконання операцій.
+    /// </summary>
+    private readonly ILogger<BookingApplicationService> _logger;
+
+    /// <summary>
     /// Конструктор класу BookingApplicationService, який приймає репозиторії та об'єкт UnitOfWork як параметри. Ініціалізує приватні поля для доступу до даних про бронювання, зали та послуги.
     /// </summary>
     /// <param name="bookingRepository">Репозиторій для роботи з бронюваннями</param>
     /// <param name="hallRepository">Репозиторій для роботи з залами</param>
     /// <param name="serviceRepository">Репозиторій для роботи з послугами</param>
     /// <param name="unitOfWork">Об'єкт UnitOfWork для управління транзакціями</param>
-    public BookingApplicationService(
-        IBookingRepository bookingRepository,
-        IHallRepository hallRepository,
-        IServiceRepository serviceRepository,
-        IUnitOfWork unitOfWork)
+    public BookingApplicationService(IBookingRepository bookingRepository, IHallRepository hallRepository, IServiceRepository serviceRepository, IUnitOfWork unitOfWork, ILogger<BookingApplicationService> logger)
     {
         _bookingRepository = bookingRepository;
         _hallRepository = hallRepository;
         _serviceRepository = serviceRepository;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     /// <summary>
@@ -64,8 +67,9 @@ public class BookingApplicationService : IBookingApplicationService
 
         if (hall is null)
         {
-            throw new KeyNotFoundException(
-                $"Hall with ID '{request.HallId}' was not found.");
+            _logger.LogWarning("Booking creation failed. Hall not found. HallId: {HallId}.", request.HallId);
+
+            throw new KeyNotFoundException($"Hall with ID '{request.HallId}' was not found.");
         }
 
         var hasConflict = await _bookingRepository
@@ -76,8 +80,9 @@ public class BookingApplicationService : IBookingApplicationService
 
         if (hasConflict)
         {
-            throw new InvalidOperationException(
-                "The hall is already booked for the selected time period.");
+            _logger.LogWarning("Booking creation rejected because the hall is already booked. HallId: {HallId}, StartTime: {StartTime}, EndTime: {EndTime}.", request.HallId, request.StartTime, request.EndTime);
+
+            throw new InvalidOperationException("The hall is already booked for the selected time period.");
         }
 
         var serviceIds = request.ServiceIds
@@ -133,6 +138,8 @@ public class BookingApplicationService : IBookingApplicationService
 
         await _unitOfWork.SaveChangesAsync();
 
+        _logger.LogInformation("Booking created successfully. BookingId: {BookingId}, HallId: {HallId}, StartTime: {StartTime}, EndTime: {EndTime}, TotalCost: {TotalCost}.", booking.Id, booking.HallId, booking.StartTime, booking.EndTime, booking.TotalCost);
+
         return MapToResponse(
             booking,
             services);
@@ -144,9 +151,7 @@ public class BookingApplicationService : IBookingApplicationService
     /// <param name="requestedIds">Колекція ідентифікаторів запитаних послуг</param>
     /// <param name="foundServices">Колекція знайдених об'єктів Service</param>
     /// <exception cref="KeyNotFoundException"></exception>
-    private static void ValidateServicesExist(
-        IReadOnlyCollection<Guid> requestedIds,
-        IReadOnlyCollection<Service> foundServices)
+    private void ValidateServicesExist(IReadOnlyCollection<Guid> requestedIds, IReadOnlyCollection<Service> foundServices)
     {
         var foundIds = foundServices
             .Select(service => service.Id)
@@ -158,6 +163,10 @@ public class BookingApplicationService : IBookingApplicationService
 
         if (missingIds.Count > 0)
         {
+            _logger.LogWarning(
+                "Booking creation failed. Services not found. ServiceIds: {ServiceIds}.",
+                missingIds);
+
             throw new KeyNotFoundException(
                 $"Services not found: {string.Join(", ", missingIds)}.");
         }
@@ -169,9 +178,7 @@ public class BookingApplicationService : IBookingApplicationService
     /// <param name="hall">Об'єкт Hall, у якому перевіряється доступність послуг</param>
     /// <param name="requestedServiceIds">Колекція ідентифікаторів запитаних послуг</param>
     /// <exception cref="InvalidOperationException"></exception>
-    private static void ValidateHallServices(
-        Hall hall,
-        IReadOnlyCollection<Guid> requestedServiceIds)
+    private void ValidateHallServices(Hall hall, IReadOnlyCollection<Guid> requestedServiceIds)
     {
         var availableServiceIds = hall.Services
             .Select(service => service.ServiceId)
@@ -183,6 +190,12 @@ public class BookingApplicationService : IBookingApplicationService
 
         if (unavailableServiceIds.Count > 0)
         {
+            _logger.LogWarning(
+                "Booking creation rejected. Requested services are not available in hall. HallId: {HallId}, HallName: {HallName}, ServiceIds: {ServiceIds}.",
+                hall.Id,
+                hall.Name,
+                unavailableServiceIds);
+
             throw new InvalidOperationException(
                 $"The following services are not available in hall " +
                 $"'{hall.Name}': " +
@@ -240,6 +253,8 @@ public class BookingApplicationService : IBookingApplicationService
 
         if (booking is null)
         {
+            _logger.LogWarning("Booking deletion failed. Booking not found. BookingId: {BookingId}.", id);
+
             throw new KeyNotFoundException(
                 $"Booking with ID '{id}' was not found.");
         }
@@ -247,5 +262,7 @@ public class BookingApplicationService : IBookingApplicationService
         _bookingRepository.Delete(booking);
 
         await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation("Booking deleted successfully. BookingId: {BookingId}, HallId: {HallId}.", booking.Id, booking.HallId);
     }
 }

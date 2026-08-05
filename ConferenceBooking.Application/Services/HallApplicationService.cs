@@ -3,6 +3,7 @@ using ConferenceBooking.Application.DTOs.Services;
 using ConferenceBooking.Application.Interfaces;
 using ConferenceBooking.Domain.Entities;
 using ConferenceBooking.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace ConferenceBooking.Application.Services;
 
@@ -32,21 +33,23 @@ public class HallApplicationService : IHallApplicationService
     private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>
+    /// Логер для запису повідомлень про помилки та інформаційних повідомлень. Використовується для логування подій під час виконання операцій.
+    /// </summary>
+    private readonly ILogger<HallApplicationService> _logger;
+
+    /// <summary>
     /// Конструктор класу HallApplicationService, який приймає репозиторії для залів, послуг та управління транзакціями як параметри.
     /// </summary>
     /// <param name="hallRepository">Репозиторій для роботи з залами конференцій</param>
     /// <param name="serviceRepository">Репозиторій для роботи з послугами конференцій</param>
     /// <param name="unitOfWork">Репозиторій для управління транзакціями та збереження змін у базі даних</param>
-    public HallApplicationService(
-        IHallRepository hallRepository,
-        IServiceRepository serviceRepository,
-        IBookingRepository bookingRepository,
-        IUnitOfWork unitOfWork)
+    public HallApplicationService(IHallRepository hallRepository, IServiceRepository serviceRepository, IBookingRepository bookingRepository, IUnitOfWork unitOfWork, ILogger<HallApplicationService> logger)
     {
         _hallRepository = hallRepository;
         _serviceRepository = serviceRepository;
         _bookingRepository = bookingRepository;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     /// <summary>
@@ -79,6 +82,8 @@ public class HallApplicationService : IHallApplicationService
 
         await _unitOfWork.SaveChangesAsync();
 
+        _logger.LogInformation("Hall created successfully. HallId: {HallId}, Name: {HallName}.", hall.Id, hall.Name);
+
         return MapToResponse(hall, services);
     }
 
@@ -95,8 +100,9 @@ public class HallApplicationService : IHallApplicationService
 
         if (hall is null)
         {
-            throw new KeyNotFoundException(
-                $"Hall with ID '{id}' was not found.");
+            _logger.LogWarning("Hall update failed. Hall not found. HallId: {HallId}.", id);
+
+            throw new KeyNotFoundException($"Hall with ID '{id}' was not found.");
         }
 
         var serviceIds = request.ServiceIds
@@ -127,6 +133,8 @@ public class HallApplicationService : IHallApplicationService
 
         await _unitOfWork.SaveChangesAsync();
 
+        _logger.LogInformation("Hall updated successfully. HallId: {HallId}, Name: {HallName}.", hall.Id, hall.Name);
+
         return MapToResponse(hall, services);
     }
 
@@ -142,21 +150,25 @@ public class HallApplicationService : IHallApplicationService
 
         if (hall is null)
         {
-            throw new KeyNotFoundException(
-                $"Hall with ID '{id}' was not found.");
+            _logger.LogWarning("Hall deletion failed. Hall not found. HallId: {HallId}.", id);
+
+            throw new KeyNotFoundException($"Hall with ID '{id}' was not found.");
         }
 
         var bookings = await _bookingRepository.GetByHallAsync(id);
 
         if (bookings.Count > 0)
         {
-            throw new InvalidOperationException(
-                "The hall cannot be deleted because it has bookings.");
+            _logger.LogWarning("Hall deletion rejected because the hall has existing bookings. HallId: {HallId}.", id);
+
+            throw new InvalidOperationException("The hall cannot be deleted because it has bookings.");
         }
 
         _hallRepository.Delete(hall);
 
         await _unitOfWork.SaveChangesAsync();
+
+        _logger.LogInformation("Hall deleted successfully. HallId: {HallId}, Name: {HallName}.", hall.Id, hall.Name);
     }
 
     /// <summary>
@@ -196,9 +208,9 @@ public class HallApplicationService : IHallApplicationService
     /// <param name="requestedIds">Колекція ідентифікаторів запитаних послуг</param>
     /// <param name="foundServices">Колекція знайдених об'єктів Service</param>
     /// <exception cref="KeyNotFoundException"></exception>
-    private static void ValidateServices(
-        IReadOnlyCollection<Guid> requestedIds,
-        IReadOnlyCollection<Service> foundServices)
+    private void ValidateServices(
+    IReadOnlyCollection<Guid> requestedIds,
+    IReadOnlyCollection<Service> foundServices)
     {
         var foundIds = foundServices
             .Select(s => s.Id)
@@ -210,6 +222,10 @@ public class HallApplicationService : IHallApplicationService
 
         if (missingIds.Count > 0)
         {
+            _logger.LogWarning(
+                "Hall operation failed. Services not found. ServiceIds: {ServiceIds}.",
+                missingIds);
+
             throw new KeyNotFoundException(
                 $"Services not found: {string.Join(", ", missingIds)}.");
         }
