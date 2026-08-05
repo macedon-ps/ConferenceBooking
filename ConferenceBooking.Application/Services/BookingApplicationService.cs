@@ -227,4 +227,25 @@ public class BookingApplicationService : IBookingApplicationService
                 .ToList()
         };
     }
+
+    /// <summary>
+    /// Метод для видалення бронювання за його ідентифікатором. Перевіряє наявність бронювання у базі даних, а якщо бронювання не знайдено, викидає KeyNotFoundException. Після видалення бронювання зберігає зміни у базі даних.
+    /// </summary>
+    /// <param name="id">Ідентифікатор бронювання, яке потрібно видалити</param>
+    /// <returns>Завершення завдання без повернення значення</returns>
+    /// <exception cref="KeyNotFoundException"></exception>
+    public async Task DeleteAsync(Guid id)
+    {
+        var booking = await _bookingRepository.GetByIdAsync(id);
+
+        if (booking is null)
+        {
+            throw new KeyNotFoundException(
+                $"Booking with ID '{id}' was not found.");
+        }
+
+        _bookingRepository.Delete(booking);
+
+        await _unitOfWork.SaveChangesAsync();
+    }
 }

@@ -1,3 +1,4 @@
+using ConferenceBooking.Api.Middleware;
 using ConferenceBooking.Application.Interfaces;
 using ConferenceBooking.Application.Services;
 using ConferenceBooking.Domain.Interfaces;
@@ -26,6 +27,7 @@ builder.Services.AddEndpointsApiExplorer();         // старий формат
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 /* Ініціалізація бази даних первинними даними, якщо вона порожня 
 using (var scope = app.Services.CreateScope())

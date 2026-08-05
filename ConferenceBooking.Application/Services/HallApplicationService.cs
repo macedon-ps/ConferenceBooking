@@ -22,6 +22,11 @@ public class HallApplicationService : IHallApplicationService
     private readonly IServiceRepository _serviceRepository;
 
     /// <summary>
+    /// Репозиторій для роботи з бронюваннями конференцій. Використовується для перевірки наявності конфліктів бронювання та доступності залів.
+    /// </summary>
+    private readonly IBookingRepository _bookingRepository;
+
+    /// <summary>
     /// Репозиторій для управління транзакціями та збереження змін у базі даних. Використовується для забезпечення цілісності даних під час виконання операцій.
     /// </summary>
     private readonly IUnitOfWork _unitOfWork;
@@ -35,10 +40,12 @@ public class HallApplicationService : IHallApplicationService
     public HallApplicationService(
         IHallRepository hallRepository,
         IServiceRepository serviceRepository,
+        IBookingRepository bookingRepository,
         IUnitOfWork unitOfWork)
     {
         _hallRepository = hallRepository;
         _serviceRepository = serviceRepository;
+        _bookingRepository = bookingRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -137,6 +144,14 @@ public class HallApplicationService : IHallApplicationService
         {
             throw new KeyNotFoundException(
                 $"Hall with ID '{id}' was not found.");
+        }
+
+        var bookings = await _bookingRepository.GetByHallAsync(id);
+
+        if (bookings.Count > 0)
+        {
+            throw new InvalidOperationException(
+                "The hall cannot be deleted because it has bookings.");
         }
 
         _hallRepository.Delete(hall);

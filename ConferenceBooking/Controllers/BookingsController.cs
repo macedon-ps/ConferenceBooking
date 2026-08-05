@@ -38,4 +38,17 @@ public class BookingsController : ControllerBase
 
         return Ok(response);
     }
+
+    /// <summary>
+    /// Метод для видалення існуючого бронювання конференції за його унікальним ідентифікатором. Приймає Guid id бронювання, яке потрібно видалити, та повертає статус NoContent у разі успішного видалення.
+    /// </summary>
+    /// <param name="id">Ідентифікатор бронювання, яке потрібно видалити</param>
+    /// <returns>Статус NoContent у разі успішного видалення</returns>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await _bookingService.DeleteAsync(id);
+
+        return NoContent();
+    }
 }
