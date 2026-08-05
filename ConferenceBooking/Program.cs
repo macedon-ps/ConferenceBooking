@@ -1,3 +1,5 @@
+using ConferenceBooking.Application.Interfaces;
+using ConferenceBooking.Application.Services;
 using ConferenceBooking.Domain.Interfaces;
 using ConferenceBooking.Infrastructure.Data;
 using ConferenceBooking.Infrastructure.Repositories;
@@ -10,6 +12,9 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IHallRepository, HallRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IHallApplicationService, HallApplicationService>();
+builder.Services.AddScoped<IBookingApplicationService, BookingApplicationService>();
 
 builder.Services.AddDbContext<ConferenceBookingDbContext>(options =>
     options.UseSqlServer(
