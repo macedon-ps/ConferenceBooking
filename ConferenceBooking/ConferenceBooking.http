@@ -1,6 +1,35 @@
-@ConferenceBooking_HostAddress = http://localhost:5009
-
-GET {{ConferenceBooking_HostAddress}}/weatherforecast/
-Accept: application/json
+@ConferenceBooking_HostAddress = https://localhost:7162
 
 ###
+# Отримати всі зали
+
+GET {{ConferenceBooking_HostAddress}}/api/halls
+
+###
+
+# Отримати зал за Id
+
+GET {{ConferenceBooking_HostAddress}}/api/halls/{hallId}
+
+###
+
+# Отримати всі послуги
+
+GET {{ConferenceBooking_HostAddress}}/api/services
+
+###
+
+# Отримати бронюванняе за Id
+
+GET {{ConferenceBooking_HostAddress}}/api/bookings/{bookingId}
+
+###
+
+# Отримати всі бронювання
+
+GET {{ConferenceBooking_HostAddress}}/api/bookings
+
+###
+
+
+
