@@ -1,4 +1,5 @@
-﻿using ConferenceBooking.Domain.Exceptions;
+﻿using ConferenceBooking.Api.Models;
+using ConferenceBooking.Domain.Exceptions;
 using System.Diagnostics;
 using System.Text.Json;
 
@@ -100,10 +101,10 @@ public class ExceptionHandlingMiddleware
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/json";
 
-        var response = new
+        var response = new ErrorResponse
         {
-            statusCode,
-            message
+            StatusCode = statusCode,
+            Message = message
         };
 
         await context.Response.WriteAsync(

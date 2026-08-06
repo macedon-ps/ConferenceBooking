@@ -5,6 +5,8 @@ using ConferenceBooking.Domain.Interfaces;
 using ConferenceBooking.Infrastructure.Data;
 using ConferenceBooking.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +27,37 @@ builder.Services.AddDbContext<ConferenceBookingDbContext>(options =>
 builder.Services.AddOpenApi();                      // новий шаблон
 
 builder.Services.AddEndpointsApiExplorer();         // старий формат
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc(
+        "v1",
+        new OpenApiInfo
+        {
+            Title = "Conference Booking API",
+            Version = "v1",
+            Description = """
+            REST API for managing conference halls and bookings.
+
+            Features:
+
+            • Hall management
+            • Booking management
+            • Search for available halls
+            • Automatic booking cost calculation
+            """,
+
+            Contact = new OpenApiContact
+            {
+                Name = "Conference Booking Project"
+            }
+        });
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+    options.IncludeXmlComments(xmlPath);
+});
 
 var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -46,7 +78,13 @@ if (app.Environment.IsDevelopment())
 
     // Swagger UI
     app.UseSwagger();
-    app.UseSwaggerUI();
+    // використання статичних файлів для Swagger UI
+    app.UseStaticFiles();
+    app.UseSwaggerUI(options =>
+    {
+        options.InjectJavascript(
+            "/swagger/conference-booking-swagger.js");
+    });
 }
 
 app.UseHttpsRedirection();

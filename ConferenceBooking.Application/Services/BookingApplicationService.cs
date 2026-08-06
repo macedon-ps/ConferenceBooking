@@ -113,6 +113,13 @@ public class BookingApplicationService : IBookingApplicationService
     /// <returns>Колекція об'єктів BookingResponse з інформацією про бронювання та пов'язані послуги</returns>
     public async Task<IReadOnlyCollection<BookingResponse>> GetByHallAsync(Guid hallId)
     {
+        var hall = await _hallRepository.GetByIdAsync(hallId);
+
+        if (hall is null)
+        {
+            throw new KeyNotFoundException($"Hall with ID '{hallId}' was not found.");
+        }
+
         var bookings = await _bookingRepository
             .GetByHallAsync(hallId);
 
