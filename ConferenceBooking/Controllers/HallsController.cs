@@ -26,6 +26,44 @@ public class HallsController : ControllerBase
     }
 
     /// <summary>
+    /// Метод для отримання списку всіх залів конференцій. Викликає сервіс для отримання даних та повертає колекцію об'єктів HallResponse з інформацією про всі зали.
+    /// </summary>
+    /// <returns>Колекція об'єктів HallResponse з інформацією про всі зали.</returns>
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyCollection<HallResponse>>> GetAll()
+    {
+        var halls = await _hallService.GetAllAsync();
+
+        return Ok(halls);
+    }
+
+    /// <summary>
+    /// Метод для отримання інформації про конкретний зал конференцій за його ідентифікатором. Викликає сервіс для отримання даних та повертає об'єкт HallResponse з інформацією про зал.
+    /// </summary>
+    /// <param name="id">Ідентифікатор залу, який потрібно отримати.</param>
+    /// <returns>Об'єкт HallResponse з інформацією про зал.</returns>
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<HallResponse>> GetById(Guid id)
+    {
+        var hall = await _hallService.GetByIdAsync(id);
+
+        return Ok(hall);
+    }
+
+    /// <summary>
+    /// Метод для отримання списку доступних залів конференцій на основі заданих параметрів. Приймає об'єкт AvailableHallsRequest, який містить параметри пошуку, та повертає колекцію об'єктів HallResponse з інформацією про доступні зали.
+    /// </summary>
+    /// <param name="request">Об'єкт AvailableHallsRequest, який містить параметри пошуку доступних залів.</param>
+    /// <returns>Колекція об'єктів HallResponse з інформацією про доступні зали.</returns>
+    [HttpGet("available")]
+    public async Task<ActionResult<IReadOnlyCollection<HallResponse>>> GetAvailable([FromQuery] AvailableHallsRequest request)
+    {
+        var response = await _hallService.GetAvailableAsync(request);
+
+        return Ok(response);
+    }
+
+    /// <summary>
     /// Метод для створення нового залу конференцій. Приймає об'єкт CreateHallRequest, який містить дані для створення залу, та повертає об'єкт HallResponse з інформацією про створений зал.
     /// </summary>
     /// <param name="request">Об'єкт CreateHallRequest, який містить дані для створення залу.</param>
@@ -63,18 +101,5 @@ public class HallsController : ControllerBase
         await _hallService.DeleteAsync(id);
 
         return NoContent();
-    }
-
-    /// <summary>
-    /// Метод для отримання списку доступних залів конференцій на основі заданих параметрів. Приймає об'єкт AvailableHallsRequest, який містить параметри пошуку, та повертає колекцію об'єктів HallResponse з інформацією про доступні зали.
-    /// </summary>
-    /// <param name="request">Об'єкт AvailableHallsRequest, який містить параметри пошуку доступних залів.</param>
-    /// <returns>Колекція об'єктів HallResponse з інформацією про доступні зали.</returns>
-    [HttpGet("available")]
-    public async Task<ActionResult<IReadOnlyCollection<HallResponse>>> GetAvailable([FromQuery] AvailableHallsRequest request)
-    {
-        var response = await _hallService.GetAvailableAsync(request);
-
-        return Ok(response);
     }
 }

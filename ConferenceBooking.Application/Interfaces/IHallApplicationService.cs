@@ -8,6 +8,26 @@ namespace ConferenceBooking.Application.Interfaces;
 public interface IHallApplicationService
 {
     /// <summary>
+    /// Сигнатура методу для отримання списку всіх залів конференцій.
+    /// </summary>
+    /// <returns>Колекція об'єктів відповіді з інформацією про всі зали.</returns>
+    Task<IReadOnlyCollection<HallResponse>> GetAllAsync();
+
+    /// <summary>
+    /// Сигнатура методу для отримання залу конференцій за його унікальним ідентифікатором.
+    /// </summary>
+    /// <param name="id">Унікальний ідентифікатор залу.</param>
+    /// <returns>Об'єкт відповіді з інформацією про зал.</returns>
+    Task<HallResponse> GetByIdAsync(Guid id);
+
+    /// <summary>
+    /// Сигнатура методу для отримання списку доступних залів конференцій на основі заданих критеріїв.
+    /// </summary>
+    /// <param name="request">Об'єкт запиту для отримання доступних залів.</param>
+    /// <returns>Колекція об'єктів відповіді з інформацією про доступні зали.</returns>
+    Task<IReadOnlyCollection<HallResponse>> GetAvailableAsync(AvailableHallsRequest request);
+
+    /// <summary>
     /// Сигнатура методу для створення нового залу конференцій.
     /// </summary>
     /// <param name="request">Об'єкт запиту для створення залу.</param>
@@ -29,11 +49,4 @@ public interface IHallApplicationService
     /// </summary>
     /// <param name="id">Унікальний ідентифікатор залу, який потрібно видалити.</param>
     Task DeleteAsync(Guid id);
-
-    /// <summary>
-    /// Сигнатура методу для отримання списку доступних залів конференцій на основі заданих критеріїв.
-    /// </summary>
-    /// <param name="request">Об'єкт запиту для отримання доступних залів.</param>
-    /// <returns>Колекція об'єктів відповіді з інформацією про доступні зали.</returns>
-    Task<IReadOnlyCollection<HallResponse>> GetAvailableAsync(AvailableHallsRequest request);
 }

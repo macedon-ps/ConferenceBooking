@@ -53,6 +53,92 @@ public class HallApplicationService : IHallApplicationService
     }
 
     /// <summary>
+    /// Метод для отримання списку всіх залів конференцій. Використовує репозиторій для отримання даних про зали та відповідні послуги, а потім перетворює їх у колекцію об'єктів HallResponse.
+    /// </summary>
+    /// <returns>Колекція об'єктів HallResponse, що містять дані про всі зали та надані послуги</returns>
+    public async Task<IReadOnlyCollection<HallResponse>> GetAllAsync()
+    {
+        var halls = await _hallRepository.GetAllAsync();
+
+        var serviceIds = halls
+            .SelectMany(h => h.Services)
+            .Select(hs => hs.ServiceId)
+            .Distinct()
+            .ToList();
+
+        var services = await _serviceRepository
+            .GetByIdsAsync(serviceIds);
+
+        var serviceDictionary = services
+            .ToDictionary(s => s.Id);
+
+        return halls
+            .Select(hall => MapToResponse(
+                hall,
+                serviceDictionary))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Метод для отримання залу конференцій за його ідентифікатором. Використовує репозиторій для отримання даних про зал та відповідні послуги, а потім перетворює їх у об'єкт HallResponse. Якщо зал не знайдено, викидає виняток KeyNotFoundException.
+    /// </summary>
+    /// <param name="id">Унікальний ідентифікатор залу</param>
+    /// <returns>Об'єкт HallResponse, що містить дані про зал та надані послуги</returns>
+    /// <exception cref="KeyNotFoundException"></exception>
+    public async Task<HallResponse> GetByIdAsync(Guid id)
+    {
+        var hall = await _hallRepository.GetByIdAsync(id);
+
+        if (hall is null)
+        {
+            _logger.LogWarning("Hall retrieval failed. Hall not found. HallId: {HallId}.", id);
+
+            throw new KeyNotFoundException($"Hall with ID '{id}' was not found.");
+        }
+
+        var serviceIds = hall.Services
+            .Select(hs => hs.ServiceId)
+            .Distinct()
+            .ToList();
+
+        var services = await _serviceRepository
+            .GetByIdsAsync(serviceIds);
+
+        return MapToResponse(hall, services);
+    }
+
+    /// <summary>
+    /// Метод для отримання списку доступних залів конференцій на основі заданого проміжку часу та мінімальної місткості. Приймає об'єкт AvailableHallsRequest, який містить початковий та кінцевий час, а також мінімальну місткість. Повертає колекцію об'єктів HallResponse, що містять дані про доступні зали та надані послуги.
+    /// </summary>
+    /// <param name="request">Об'єкт AvailableHallsRequest, що містить початковий та кінцевий час, а також мінімальну місткість</param>
+    /// <returns>Колекція об'єктів HallResponse, що містять дані про доступні зали та надані послуги</returns>
+    public async Task<IReadOnlyCollection<HallResponse>> GetAvailableAsync(AvailableHallsRequest request)
+    {
+        var halls = await _hallRepository.GetAvailableAsync(
+            request.StartTime,
+            request.EndTime,
+            request.Capacity);
+
+        var serviceIds = halls
+            .SelectMany(h => h.Services)
+            .Select(hs => hs.ServiceId)
+            .Distinct()
+            .ToList();
+
+        var services = await _serviceRepository
+            .GetByIdsAsync(serviceIds);
+
+        var serviceDictionary = services
+            .ToDictionary(s => s.Id);
+
+        return halls
+            .Select(hall => MapToResponse(
+                hall,
+                serviceDictionary))
+            .ToList();
+    }
+
+    /// <summary>
     /// Метод для створення нового залу конференцій. Приймає об'єкт CreateHallRequest, який містить дані про зал та список ідентифікаторів послуг, що надаються у залі. Перевіряє наявність послуг у базі даних, створює новий об'єкт Hall та зберігає його у базі даних.
     /// </summary>
     /// <param name="request">Об'єкт CreateHallRequest, що містить дані про зал та список ідентифікаторів послуг</param>
@@ -169,37 +255,6 @@ public class HallApplicationService : IHallApplicationService
         await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("Hall deleted successfully. HallId: {HallId}, Name: {HallName}.", hall.Id, hall.Name);
-    }
-
-    /// <summary>
-    /// Метод для отримання списку доступних залів конференцій на основі заданого проміжку часу та мінімальної місткості. Приймає об'єкт AvailableHallsRequest, який містить початковий та кінцевий час, а також мінімальну місткість. Повертає колекцію об'єктів HallResponse, що містять дані про доступні зали та надані послуги.
-    /// </summary>
-    /// <param name="request">Об'єкт AvailableHallsRequest, що містить початковий та кінцевий час, а також мінімальну місткість</param>
-    /// <returns>Колекція об'єктів HallResponse, що містять дані про доступні зали та надані послуги</returns>
-    public async Task<IReadOnlyCollection<HallResponse>> GetAvailableAsync(AvailableHallsRequest request)
-    {
-        var halls = await _hallRepository.GetAvailableAsync(
-            request.StartTime,
-            request.EndTime,
-            request.Capacity);
-
-        var serviceIds = halls
-            .SelectMany(h => h.Services)
-            .Select(hs => hs.ServiceId)
-            .Distinct()
-            .ToList();
-
-        var services = await _serviceRepository
-            .GetByIdsAsync(serviceIds);
-
-        var serviceDictionary = services
-            .ToDictionary(s => s.Id);
-
-        return halls
-            .Select(hall => MapToResponse(
-                hall,
-                serviceDictionary))
-            .ToList();
     }
 
     /// <summary>

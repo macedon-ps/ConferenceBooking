@@ -25,6 +25,17 @@ public class BookingRepository : IBookingRepository
     }
 
     /// <summary>
+    /// Метод для отримання всіх бронювань з бази даних.
+    /// </summary>
+    /// <returns>Список всіх бронювань</returns>
+    public async Task<IReadOnlyList<Booking>> GetAllAsync()
+    {
+        return await _context.Bookings
+            .Include(b => b.Services)
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// Метод для отримання бронювання за його унікальним ідентифікатором.
     /// </summary>
     /// <param name="id">Унікальний ідентифікатор бронювання</param>

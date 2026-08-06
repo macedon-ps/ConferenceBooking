@@ -54,6 +54,85 @@ public class BookingApplicationService : IBookingApplicationService
     }
 
     /// <summary>
+    /// Метод для отримання всіх бронювань. Використовується для отримання списку всіх бронювань у системі. Повертає колекцію об'єктів BookingResponse з інформацією про бронювання та пов'язані послуги.
+    /// </summary>
+    /// <returns>Колекція об'єктів BookingResponse з інформацією про бронювання та пов'язані послуги</returns>
+    public async Task<IReadOnlyCollection<BookingResponse>> GetAllAsync()
+    {
+        var bookings = await _bookingRepository
+            .GetAllAsync();
+
+        var serviceIds = bookings
+            .SelectMany(b => b.Services)
+            .Select(bs => bs.ServiceId)
+            .Distinct()
+            .ToList();
+
+        var services = await _serviceRepository
+            .GetByIdsAsync(serviceIds);
+
+        return bookings
+            .Select(booking => MapToResponse(
+                booking,
+                services))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Метод для отримання бронювання за його ідентифікатором. Перевіряє наявність бронювання у базі даних, а якщо бронювання не знайдено, викидає KeyNotFoundException. Повертає об'єкт BookingResponse з інформацією про бронювання та пов'язані послуги.
+    /// </summary>
+    /// <param name="id">Унікальний ідентифікатор бронювання</param>
+    /// <returns>Об'єкт BookingResponse з інформацією про бронювання та пов'язані послуги</returns>
+    /// <exception cref="KeyNotFoundException"></exception>
+    public async Task<BookingResponse> GetByIdAsync(Guid id)
+    {
+        var booking = await _bookingRepository.GetByIdAsync(id);
+
+        if (booking is null)
+        {
+            _logger.LogWarning("Booking retrieval failed. Booking not found. BookingId: {BookingId}.", id);
+
+            throw new KeyNotFoundException($"Booking with ID '{id}' was not found.");
+        }
+
+        var serviceIds = booking.Services
+            .Select(bs => bs.ServiceId)
+            .Distinct()
+            .ToList();
+
+        var services = await _serviceRepository
+            .GetByIdsAsync(serviceIds);
+
+        return MapToResponse(booking, services);
+    }
+
+    /// <summary>
+    /// Метод для отримання всіх бронювань, пов'язаних з конкретним залом. Використовується для отримання списку бронювань за ідентифікатором залу. Повертає колекцію об'єктів BookingResponse з інформацією про бронювання та пов'язані послуги.
+    /// </summary>
+    /// <param name="hallId">Унікальний ідентифікатор залу</param>
+    /// <returns>Колекція об'єктів BookingResponse з інформацією про бронювання та пов'язані послуги</returns>
+    public async Task<IReadOnlyCollection<BookingResponse>> GetByHallAsync(Guid hallId)
+    {
+        var bookings = await _bookingRepository
+            .GetByHallAsync(hallId);
+
+        var serviceIds = bookings
+            .SelectMany(b => b.Services)
+            .Select(bs => bs.ServiceId)
+            .Distinct()
+            .ToList();
+
+        var services = await _serviceRepository
+            .GetByIdsAsync(serviceIds);
+
+        return bookings
+            .Select(booking => MapToResponse(
+                booking,
+                services))
+            .ToList();
+    }
+
+    /// <summary>
     /// Метод для створення нового бронювання. Перевіряє наявність залу, конфлікти у часі та доступність послуг, а також обчислює загальну вартість бронювання. Повертає об'єкт BookingResponse з інформацією про створене бронювання.
     /// </summary>
     /// <param name="request">Об'єкт CreateBookingRequest, що містить дані для створення бронювання</param>
@@ -209,9 +288,7 @@ public class BookingApplicationService : IBookingApplicationService
     /// <param name="booking">Об'єкт Booking, який потрібно перетворити</param>
     /// <param name="services">Колекція об'єктів Service, пов'язаних з бронюванням</param>
     /// <returns>Об'єкт BookingResponse, що представляє результат бронювання</returns>
-    private static BookingResponse MapToResponse(
-        Booking booking,
-        IReadOnlyCollection<Service> services)
+    private static BookingResponse MapToResponse(Booking booking, IReadOnlyCollection<Service> services)
     {
         var serviceDictionary = services
             .ToDictionary(service => service.Id);

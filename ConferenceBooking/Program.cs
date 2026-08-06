@@ -15,6 +15,7 @@ builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IHallApplicationService, HallApplicationService>();
+builder.Services.AddScoped<IServiceApplicationService, ServiceApplicationService>();
 builder.Services.AddScoped<IBookingApplicationService, BookingApplicationService>();
 
 builder.Services.AddDbContext<ConferenceBookingDbContext>(options =>

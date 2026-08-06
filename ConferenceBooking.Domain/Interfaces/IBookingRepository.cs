@@ -8,6 +8,12 @@ namespace ConferenceBooking.Domain.Interfaces
     public interface IBookingRepository
     {
         /// <summary>
+        /// Сигнатура методу для отримання всіх бронювань.
+        /// </summary>
+        /// <returns>Список всіх бронювань</returns>
+        Task<IReadOnlyList<Booking>> GetAllAsync();
+
+        /// <summary>
         /// Сигнатура методу для отримання бронювання за його унікальним ідентифікатором.
         /// </summary>
         /// <param name="id">Guid id бронювання</param>
