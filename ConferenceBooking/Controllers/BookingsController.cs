@@ -1,7 +1,10 @@
-﻿using ConferenceBooking.Application.DTOs.Bookings;
+﻿using ConferenceBooking.Api.Swagger.Examples.Bookings;
+using ConferenceBooking.Api.Swagger.Examples.Bookinhs;
+using ConferenceBooking.Application.DTOs.Bookings;
 using ConferenceBooking.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-
+using Swashbuckle.AspNetCore.Annotations;
+using Swashbuckle.AspNetCore.Filters;
 namespace ConferenceBooking.Api.Controllers;
 
 /// <summary>
@@ -26,10 +29,13 @@ public class BookingsController : ControllerBase
     }
 
     /// <summary>
-    /// Метод для отримання всіх бронювань конференцій. Викликає сервіс для отримання списку всіх бронювань та повертає їх у вигляді колекції об'єктів BookingResponse.
+    /// Отримати всі бронювання залів.
     /// </summary>
-    /// <returns>Колекція об'єктів BookingResponse, що представляють всі бронювання конференцій.</returns>
-    [HttpGet] 
+    /// <remarks>Метод для отримання всіх бронювань залів. Викликає сервіс для отримання списку всіх бронювань та повертає їх у вигляді колекції об'єктів BookingResponse.
+    /// </remarks>
+    /// <returns>Колекція об'єктів BookingResponse, що представляють всі бронювання залів.</returns>
+    [HttpGet]
+    [SwaggerResponseExample(StatusCodes.Status200OK, typeof(BookingsResponseExample))]
     public async Task<ActionResult<IReadOnlyCollection<BookingResponse>>> GetAll() 
     { 
         var bookings = await _bookingService.GetAllAsync(); 
@@ -37,11 +43,14 @@ public class BookingsController : ControllerBase
     }
 
     /// <summary>
-    /// Метод для отримання конкретного бронювання конференції за його унікальним ідентифікатором. Викликає сервіс для отримання бронювання за вказаним Guid id та повертає об'єкт BookingResponse з деталями бронювання.
+    /// Отримати бронювання залу за його унікальним ідентифікатором.
     /// </summary>
-    /// <param name="id">Унікальний ідентифікатор бронювання конференції.</param>
-    /// <returns>Об'єкт BookingResponse з деталями бронювання конференції.</returns>
+    /// <remarks>Метод для отримання конкретного бронювання залу за його унікальним ідентифікатором. Викликає сервіс для отримання бронювання за вказаним Guid id та повертає об'єкт BookingResponse з деталями бронювання.
+    /// </remarks>
+    /// <param name="id">Унікальний ідентифікатор бронювання залу.</param>
+    /// <returns>Об'єкт BookingResponse з деталями бронювання залу.</returns>
     [HttpGet("{id:guid}")]
+    [SwaggerResponseExample(StatusCodes.Status200OK, typeof(BookingResponseExample))]
     public async Task<ActionResult<BookingResponse>> GetById(Guid id)
     {
         var booking = await _bookingService.GetByIdAsync(id);
@@ -50,11 +59,14 @@ public class BookingsController : ControllerBase
     }
 
     /// <summary>
-    /// Метод для отримання всіх бронювань конференцій, пов'язаних з конкретним залом. Викликає сервіс для отримання списку бронювань за вказаним Guid hallId та повертає їх у вигляді колекції об'єктів BookingResponse.
+    /// Отримати всі бронювання, пов'язані з конкретним залом.
     /// </summary>
+    /// <remarks>Метод для отримання всіх бронювань, пов'язаних з конкретним залом. Викликає сервіс для отримання списку бронювань за вказаним Guid hallId та повертає їх у вигляді колекції об'єктів BookingResponse.
+    /// </remarks>
     /// <param name="hallId">Унікальний ідентифікатор залу.</param>
-    /// <returns>Колекція об'єктів BookingResponse, що представляють всі бронювання конференцій для вказаного залу.</returns>
-    [HttpGet("by-hall/{hallId:guid}")]
+    /// <returns>Колекція об'єктів BookingResponse, що представляють всі бронювання для вказаного залу.</returns>
+    [HttpGet("byHall/{hallId:guid}")]
+    [SwaggerResponseExample(StatusCodes.Status200OK, typeof(BookingsResponseExample))]
     public async Task<ActionResult<IReadOnlyCollection<BookingResponse>>> GetByHall(Guid hallId)
     {
         var bookings = await _bookingService.GetByHallAsync(hallId);
@@ -62,13 +74,16 @@ public class BookingsController : ControllerBase
         return Ok(bookings);
     }
 
-
     /// <summary>
-    /// Метод для створення нового бронювання конференції. Приймає об'єкт CreateBookingRequest, який містить інформацію про бронювання, та повертає об'єкт BookingResponse з деталями створеного бронювання.
+    /// Створити нове бронювання залу.
     /// </summary>
+    /// <remarks>Метод для створення нового бронювання конференції. Приймає об'єкт CreateBookingRequest, який містить інформацію про бронювання, та повертає об'єкт BookingResponse з деталями створеного бронювання.
+    /// </remarks>
     /// <param name="request">Об'єкт CreateBookingRequest, який містить інформацію про бронювання.</param>
     /// <returns>Об'єкт BookingResponse з деталями створеного бронювання.</returns>
     [HttpPost]
+    [SwaggerRequestExample(typeof(CreateBookingRequest), typeof(CreateBookingRequestExample))]
+    [SwaggerResponseExample(StatusCodes.Status200OK, typeof(BookingResponseExample))]
     public async Task<ActionResult<BookingResponse>> Create(CreateBookingRequest request)
     {
         var response = await _bookingService.CreateAsync(request);
@@ -77,8 +92,10 @@ public class BookingsController : ControllerBase
     }
 
     /// <summary>
-    /// Метод для видалення існуючого бронювання конференції за його унікальним ідентифікатором. Приймає Guid id бронювання, яке потрібно видалити, та повертає статус NoContent у разі успішного видалення.
+    /// Видалити бронювання залу за його унікальним ідентифікатором.
     /// </summary>
+    /// <remarks>Метод для видалення існуючого бронювання залу за його унікальним ідентифікатором. Приймає Guid id бронювання, яке потрібно видалити, та повертає статус NoContent у разі успішного видалення.
+    /// </remarks>
     /// <param name="id">Ідентифікатор бронювання, яке потрібно видалити</param>
     /// <returns>Статус NoContent у разі успішного видалення</returns>
     [HttpDelete("{id:guid}")]

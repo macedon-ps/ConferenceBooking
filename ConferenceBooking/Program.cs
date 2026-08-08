@@ -1,4 +1,5 @@
 using ConferenceBooking.Api.Middleware;
+using ConferenceBooking.Api.Swagger;
 using ConferenceBooking.Application.Interfaces;
 using ConferenceBooking.Application.Services;
 using ConferenceBooking.Domain.Interfaces;
@@ -7,6 +8,7 @@ using ConferenceBooking.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +31,9 @@ builder.Services.AddOpenApi();                      // новий шаблон
 builder.Services.AddEndpointsApiExplorer();         // старий формат
 builder.Services.AddSwaggerGen(options =>
 {
+    // Додати підтримку анотацій Swagger для контролерів та моделей
+    options.EnableAnnotations();
+
     options.SwaggerDoc(
         "v1",
         new OpenApiInfo
@@ -38,12 +43,13 @@ builder.Services.AddSwaggerGen(options =>
             Description = """
             REST API for managing conference halls and bookings.
 
-            Features:
-
-            • Hall management
-            • Booking management
-            • Search for available halls
-            • Automatic booking cost calculation
+            Функції: 
+            
+            • Управління залами 
+            • Управління сервісами 
+            • Управління бронюванням 
+            • Пошук доступних залів 
+            • Автоматичний розрахунок вартості бронювання
             """,
 
             Contact = new OpenApiContact
@@ -52,12 +58,26 @@ builder.Services.AddSwaggerGen(options =>
             }
         });
 
+    // Додати підтримку прикладів для моделей
+    options.OperationFilter<DefaultResponsesOperationFilter>();
+    
+    // Додати підтримку прикладів для маршрутів
+    options.OperationFilter<SwaggerRouteExamplesOperationFilter>();
+    
+    // Додати підтримку прикладів для моделей
+    options.ExampleFilters();
+    
+    // Додати підтримку прикладів для маршрутів
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
 
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 
+    // Додати підтримку XML-коментарів для контролерів та моделей
     options.IncludeXmlComments(xmlPath);
+    
 });
+
+builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>();
 
 var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -80,11 +100,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     // використання статичних файлів для Swagger UI
     app.UseStaticFiles();
-    app.UseSwaggerUI(options =>
-    {
-        options.InjectJavascript(
-            "/swagger/conference-booking-swagger.js");
-    });
+    app.UseSwaggerUI();
+    /* можливість розширення Swagger UI кастомним JavaScript 
+       app.UseSwaggerUI(options =>
+        {
+            options.InjectJavascript("/swagger/conference-booking-swagger.js");
+        });
+    */
 }
 
 app.UseHttpsRedirection();

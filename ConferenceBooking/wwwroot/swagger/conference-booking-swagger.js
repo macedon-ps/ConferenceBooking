@@ -1,11 +1,23 @@
 ﻿class ConferenceBookingSwagger {
 
     constructor() {
+        // Справочные данные
         this.halls = [];
         this.services = [];
+
+        // Текущая операция Swagger
+        this.currentOperation = null;
+
+        // JSON редактор
         this.currentTextarea = null;
+
+        // Панель Booking Helper
         this.currentHelper = null;
+
+        // Выпадающий список залов
         this.currentHallSelect = null;
+
+        // Контейнер услуг
         this.currentServicesContainer = null;
     }
 
@@ -84,25 +96,56 @@
 
     onDomChanged() {
 
-        const textarea = document.querySelector("textarea.body-param__text");
+        const operations = document.querySelectorAll(".opblock");
+
+        operations.forEach(operation => {
+
+            this.tryInitializeBookingOperation(operation);
+
+        });
+
+    }
+
+    tryInitializeBookingOperation(operation) {
+
+        // интересуют только POST операции
+        if (!operation.classList.contains("opblock-post")) {
+            return;
+        }
+
+        // проверяем, что это именно POST /api/bookings
+        const pathElement = operation.querySelector(".opblock-summary-path");
+
+        if (!pathElement) {
+            return;
+        }
+
+        const path = pathElement.textContent.trim().toLowerCase();
+
+        if (path !== "/api/bookings") {
+            return;
+        }
+
+        // форма должна быть открыта (Try it out)
+        const textarea = operation.querySelector("textarea.body-param__text");
 
         if (!textarea) {
             return;
         }
 
-        const parent = textarea.parentElement;
-
-        if (!parent) {
+        // helper уже существует
+        if (operation.querySelector(".booking-helper")) {
             return;
         }
 
-        if (parent.querySelector(".booking-helper")) {
-            return;
-        }
+        console.log("Booking operation detected.");
 
-        console.log("Booking request textarea detected!");
+        this.currentOperation = operation;
 
-        this.createBookingHelper(parent);
+        this.currentTextarea = textarea;
+
+        this.createBookingHelper(textarea.parentElement);
+
     }
 
     createBookingHelper(parent) {
@@ -159,11 +202,11 @@
 
         this.currentHelper = helper;
 
-        this.currentTextarea = parent.querySelector("textarea");
+        this.currentHallSelect =
+            helper.querySelector("#hallSelect");
 
-        this.currentHallSelect = helper.querySelector("#hallSelect");
-
-        this.currentServicesContainer = helper.querySelector("#servicesContainer");
+        this.currentServicesContainer =
+            helper.querySelector("#servicesContainer");
 
         this.populateHallDropdown();
 

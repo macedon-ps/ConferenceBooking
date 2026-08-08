@@ -1,6 +1,9 @@
-﻿using ConferenceBooking.Application.DTOs.Services;
+﻿using ConferenceBooking.Api.Swagger.Examples.Services;
+using ConferenceBooking.Application.DTOs.Services;
 using ConferenceBooking.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
+using Swashbuckle.AspNetCore.Filters;
 
 namespace ConferenceBooking.Api.Controllers;
 
@@ -27,10 +30,13 @@ public class ServicesController : ControllerBase
     }
 
     /// <summary>
-    /// Метод для отримання списку всіх послуг конференцій. Викликає сервіс для отримання даних та повертає колекцію об'єктів ServiceResponse з інформацією про всі послуги.
+    /// Отримати список всіх послуг.
     /// </summary>
+    /// <remarks>Метод для отримання списку всіх послуг. Викликає сервіс для отримання даних та повертає колекцію об'єктів ServiceResponse з інформацією про всі послуги.
+    /// </remarks>
     /// <returns>Колекція об'єктів ServiceResponse з інформацією про всі послуги.</returns>
     [HttpGet]
+    [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ServicesResponseExample))]
     public async Task<ActionResult<IReadOnlyCollection<ServiceResponse>>> GetAll()
     {
         var services = await _serviceApplicationService.GetAllAsync();
@@ -39,11 +45,14 @@ public class ServicesController : ControllerBase
     }
 
     /// <summary>
-    /// Метод для отримання інформації про конкретну послугу конференцій за її унікальним ідентифікатором. Викликає сервіс для отримання даних та повертає об'єкт ServiceResponse з інформацією про послугу.
+    /// Отримати послугу за її унікальним ідентифікатором.
     /// </summary>
+    /// <remarks>Метод для отримання інформації про конкретну послугу залу за її унікальним ідентифікатором. Викликає сервіс для отримання даних та повертає об'єкт ServiceResponse з інформацією про послугу.
+    /// </remarks>
     /// <param name="id">Унікальний ідентифікатор послуги.</param>
     /// <returns>Об'єкт ServiceResponse з інформацією про послугу.</returns>
     [HttpGet("{id:guid}")]
+    [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ServiceResponseExample))]
     public async Task<ActionResult<ServiceResponse>> GetById(Guid id)
     {
         var service = await _serviceApplicationService.GetByIdAsync(id);
