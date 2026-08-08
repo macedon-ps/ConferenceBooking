@@ -37,6 +37,8 @@ public class BookingApplicationService : IBookingApplicationService
     /// </summary>
     private readonly ILogger<BookingApplicationService> _logger;
 
+    private readonly IBookingCostCalculator _costCalculator;
+
     /// <summary>
     /// Конструктор класу BookingApplicationService, який приймає репозиторії та об'єкт UnitOfWork як параметри. Ініціалізує приватні поля для доступу до даних про бронювання, зали та послуги.
     /// </summary>
@@ -44,13 +46,14 @@ public class BookingApplicationService : IBookingApplicationService
     /// <param name="hallRepository">Репозиторій для роботи з залами</param>
     /// <param name="serviceRepository">Репозиторій для роботи з послугами</param>
     /// <param name="unitOfWork">Об'єкт UnitOfWork для управління транзакціями</param>
-    public BookingApplicationService(IBookingRepository bookingRepository, IHallRepository hallRepository, IServiceRepository serviceRepository, IUnitOfWork unitOfWork, ILogger<BookingApplicationService> logger)
+    public BookingApplicationService(IBookingRepository bookingRepository, IHallRepository hallRepository, IServiceRepository serviceRepository, IUnitOfWork unitOfWork, ILogger<BookingApplicationService> logger, IBookingCostCalculator costCalculator)
     {
         _bookingRepository = bookingRepository;
         _hallRepository = hallRepository;
         _serviceRepository = serviceRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _costCalculator = costCalculator;
     }
 
     /// <summary>
@@ -70,7 +73,7 @@ public class BookingApplicationService : IBookingApplicationService
 
         var services = await _serviceRepository
             .GetByIdsAsync(serviceIds);
-
+        
         return bookings
             .Select(booking => MapToResponse(
                 booking,
@@ -184,41 +187,18 @@ public class BookingApplicationService : IBookingApplicationService
             hall,
             serviceIds);
 
-        var booking = Booking.Create(
-            request.HallId,
-            request.StartTime,
-            request.EndTime);
+        var booking = Booking.Create(request.HallId, request.StartTime, request.EndTime);
 
         foreach (var service in services)
         {
             booking.AddService(service.Id);
         }
 
-        /*
-         * На этом этапе полноценный расчет стоимости
-         * еще не реализован.
-         *
-         * Шаг 13 проекта — отдельная реализация
-         * расчета стоимости с учетом тарифных периодов.
-         *
-         * Пока сохраняем базовую стоимость:
-         * стоимость зала за час × количество часов
-         * + стоимость выбранных услуг.
-         */
-        var durationInHours =
-            (decimal)(request.EndTime - request.StartTime)
-            .TotalHours;
+        var servicesCost = services.Sum(service => service.Price);
 
-        var hallCost =
-            hall.HourlyRate * durationInHours;
+        var cost = _costCalculator.Calculate(request.StartTime, request.EndTime, hall.HourlyRate, servicesCost);
 
-        var servicesCost =
-            services.Sum(service => service.Price);
-
-        var totalCost =
-            hallCost + servicesCost;
-
-        booking.SetTotalCost(totalCost);
+        booking.SetTotalCost(cost.TotalCost);
 
         await _bookingRepository.AddAsync(booking);
 

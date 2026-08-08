@@ -21,6 +21,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IHallApplicationService, HallApplicationService>();
 builder.Services.AddScoped<IServiceApplicationService, ServiceApplicationService>();
 builder.Services.AddScoped<IBookingApplicationService, BookingApplicationService>();
+builder.Services.AddScoped<IBookingCostCalculator, BookingCostCalculator>();
 
 builder.Services.AddDbContext<ConferenceBookingDbContext>(options =>
     options.UseSqlServer(
