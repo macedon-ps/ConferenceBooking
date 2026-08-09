@@ -86,6 +86,10 @@ public static class SwaggerExampleData
     /// </summary>
     public static readonly DateTime EndTime2 = new(2026, 8, 10, 16, 0, 0, DateTimeKind.Utc);
 
+    public static readonly DateTime ReportFrom = new(2026, 8, 1, 0, 0, 0);
+
+    public static readonly DateTime ReportTo = new(2026, 8, 10, 23, 59, 59);
+
     /// <summary>
     /// Місткість залу.
     /// </summary>

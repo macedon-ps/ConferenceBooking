@@ -66,28 +66,56 @@ public class SwaggerRouteExamplesOperationFilter : IOperationFilter
         };
     }
 
-    private static IOpenApiAny? GetQueryExample(
-    string? relativePath,
-    string? parameterName)
+   /// <summary>
+   /// Метод який повертає приклад значень для вхідних параметрів.
+   /// </summary>
+   /// <param name="relativePath">Відносинй шлях API.</param>
+   /// <param name="parameterName">Назва параметру.</param>
+   /// <returns></returns>
+    private static IOpenApiAny? GetQueryExample(string? relativePath, string? parameterName)
     {
-        if (relativePath != "api/halls/available")
-            return null;
-
-        return parameterName?.ToLowerInvariant() switch
+        if (string.IsNullOrWhiteSpace(relativePath) || string.IsNullOrWhiteSpace(parameterName))
         {
-            "starttime" =>
-                new OpenApiString(
-                    SwaggerExampleData.StartTime.ToString("yyyy-MM-ddTHH:mm:ss")),
+            return null;
+        }
 
-            "endtime" =>
-                new OpenApiString(
-                    SwaggerExampleData.EndTime.ToString("yyyy-MM-ddTHH:mm:ss")),
+        relativePath = relativePath.ToLowerInvariant();
+        parameterName = parameterName.ToLowerInvariant();
 
-            "capacity" =>
-                new OpenApiInteger(
-                    SwaggerExampleData.Capacity),
+        // Halls / available
+        if (relativePath == "api/halls/available")
+        {
+            return parameterName switch
+            {
+                "starttime" =>
+                new OpenApiString(SwaggerExampleData.StartTime.ToString("yyyy-MM-ddTHH:mm:ss")),
 
-            _ => null
-        };
+                "endtime" =>
+                    new OpenApiString(SwaggerExampleData.EndTime.ToString("yyyy-MM-ddTHH:mm:ss")),
+
+                "capacity" =>
+                    new OpenApiInteger(SwaggerExampleData.Capacity),
+
+                _ => null
+            };
+        }
+
+        // Reports
+        if (relativePath.StartsWith("api/reports/"))
+        {
+            return parameterName switch
+            {
+                "from" =>
+                    new OpenApiString(SwaggerExampleData.ReportFrom.ToString("yyyy-MM-ddTHH:mm:ss")),
+
+                "to" =>
+                    new OpenApiString(
+                        SwaggerExampleData.ReportTo.ToString("yyyy-MM-ddTHH:mm:ss")),
+
+                _ => null
+            };
+        }
+
+        return null;
     }
 }
